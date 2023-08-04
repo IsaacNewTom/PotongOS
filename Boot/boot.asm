@@ -3,7 +3,7 @@
 ; The boot code starts at 0x7c00 - the stack would be between 0 and 0x7bfe
 
 start:
-    ;Zero out the registers and 
+    ;Zero out the registers and set up the stack
     xor ax, ax
     mov ds, ax
     mov es, ax
