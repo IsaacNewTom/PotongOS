@@ -21,6 +21,19 @@ Start:
     test edx, (1<<26)
     jz NoLongMode ;check if 1GB pages are supported
 
+LoadKernel:
+    ;INT 13 AH=42: Read Sectors From Drive
+    mov dl, [DriveID]
+    mov si, ReadPacket ;offset
+    mov word[si], 0x10 ;size (16 bytes)
+    mov word[si+2], 100 ;number of sectors
+    mov word[si+4], 0x0 ;offset of the kernel
+    mov word[si+6], 0x1000 ;segment
+    mov dword[si+8], 6 ;sector 6
+    mov dword[si+0xc], 0
+    mov ah, 42h
+    int 0x13
+    jc ReadError
 
 PrintMessage:
     mov ah, 0x13 ;int 0x10, type 13
