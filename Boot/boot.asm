@@ -4,7 +4,7 @@
 [BITS 16]
 [ORG 0x7c00]
 
-start:
+Start:
     ;zero out the registers and set up the stack
     xor ax, ax
     mov ds, ax
@@ -16,7 +16,8 @@ start:
 TestDiskExtension:
     ;make sure CPU supports logical block addressing 
     ;INT 13h AH=41h: Check Extensions Present
-    mov [DriveID], dl ;dl holds the drive ID  when the BIOS transfers control to the boot code
+    ;dl holds the drive ID  when the BIOS transfers control to the boot code, then we would be able to load the loader from that same drive
+    mov [DriveID], dl
     mov ah, 0x41
     mov bx, 0x55aa
     int 0x13
@@ -24,14 +25,22 @@ TestDiskExtension:
     cmp bx, 0xaa55 ;the carry flag will be set if Extensions are not supported
     jne LbaNotSupported
 
-PrintMessage:
-    mov ah, 0x13 ;int 0x10, type 13
-    mov al, 1
-    mov bx, 0x17
-    xor dx, dx
-    mov bp, Message
-    mov cx, MessageLen
-    int 0x10
+LoadLoader:
+    ;INT 13 AH=42: Read Sectors From Drive (read the loader file)
+    mov dl, [DriveID]
+    mov si, ReadPacket ;offset
+    mov word[si], 0x10 ;size (16 bytes)
+    mov word[si+2], 5 ;number of sectors
+    mov word[si+4], 0x7e00 ;offset of the loader
+    mov word[si+6], 0 ;segment
+    mov dword[si+8], 1 ;starting from sector 1
+    mov dword[si+0xc], 0
+    mov ah, 42h
+    int 0x13
+    jc ReadError
+
+    mov dl, [DriveID]
+    jmp 0x7e00 ;The loader's address
 
 End:
     hlt
@@ -49,14 +58,24 @@ LbaNotSupported:
     mov bp, LbaNotSupportedMsg ;address of the string
     int 0x10
     jmp End
+ReadError:
+    ;INT 10h / AH = 13h - write string
+    mov ah, 0x13
+    mov al, 1 ;cursor placement
+    mov bx, 0xc ;light red
+    mov cx, ReadErrorLen
+    xor dx, dx ;row, col
+    mov bp, ReadErrorMsg ;address of the string
+    int 0x10    
 
 
 ;Variables
-Message:    db "Hello, welcome to PotongOS! :)"
-MessageLen: equ $-Message
 DriveID: db 0
 LbaNotSupportedMsg: db "Disk Extension error...    "
 LbaNotSupportedLen: equ $-LbaNotSupportedMsg
+ReadPacket: times 16 db 0
+ReadErrorMsg: db "Error Reading The Loader...    "
+ReadErrorLen: equ $-ReadErrorMsg
 
 ;fill the memory between the end of the message up 0x1be with zeroes
 times (0x1be - ($-$$)) db 0
