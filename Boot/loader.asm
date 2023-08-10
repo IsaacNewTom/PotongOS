@@ -117,6 +117,16 @@ NoMemoryMap:
     mov bp, NoMemoryMapMsg ;address of the string
     int 0x10
     jmp End
+ReadError:
+    ;INT 10h / AH = 13h - write string
+    mov ah, 0x13
+    mov al, 1 ;cursor placement
+    mov bx, 0xc ;light red
+    mov cx, ReadErrorLen
+    xor dx, dx ;row, col
+    mov bp, ReadErrorMsg ;address of the string
+    int 0x10
+    jmp End
 NotSupported:
 End:
     hlt
@@ -125,9 +135,12 @@ End:
 
 ;Variables
 DriveID: db 0
+ReadPacket: times 16 db 0
 Message: db "Ready for long mode :)"
 MessageLen: equ $-Message
 NoLongModeMsg: db "CPU does not support long mode..."
 NoLongModeLen: equ $-NoLongModeMsg
 NoMemoryMapMsg: db "Error getting memory map..."
 NoMemoryMapLen: equ $-NoMemoryMapMsg
+ReadErrorMsg: db "Error reading the loader..."
+ReadErrorLen equ $-ReadErrorMsg
