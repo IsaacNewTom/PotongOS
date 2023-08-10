@@ -75,15 +75,26 @@ A20LineOn:
     xor ax, ax
     mov es, ax
 
+SetVideoMode:
+    ;INT 10h / AH = 0 - set video mode
+    mov ax, 3 ;text mode - 80x25
+    int 0x10
+
+    mov si, Message
+    mov ax, 0xB800
+    mov es, ax
+    xor di, di
+    mov cx, MessageLen
 
 PrintMessage:
-    mov ah, 0x13 ;int 0x10, type 13
-    mov al, 1
-    mov bx, 0x17
-    xor dx, dx
-    mov bp, Message
-    mov cx, MessageLen
-    int 0x10
+    mov al, [si]
+    mov [es:di], al
+    mov byte[es:di+1], 0xa
+
+    add di, 2
+    add si, 1
+    loop PrintMessage
+
 
 ;Errors
 NoLongMode:
@@ -106,7 +117,6 @@ NoMemoryMap:
     mov bp, NoMemoryMapMsg ;address of the string
     int 0x10
     jmp End
-
 NotSupported:
 End:
     hlt
@@ -115,7 +125,7 @@ End:
 
 ;Variables
 DriveID: db 0
-Message: db "Hello, welcome to PotongOS! :)"
+Message: db "Ready for long mode :)"
 MessageLen: equ $-Message
 NoLongModeMsg: db "CPU does not support long mode..."
 NoLongModeLen: equ $-NoLongModeMsg
