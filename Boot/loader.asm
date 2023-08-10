@@ -35,6 +35,47 @@ LoadKernel:
     int 0x13
     jc ReadError
 
+GetMemoryMap:
+    ;INT 15h / AH = E820h - get system memory map
+    ; returns a list of memory blocks free to use
+    xor ebx, ebx
+    mov edx, 0x534D4150 ;magic number ("SMAP") - used by the BIOS to verify the caller is reuqestign the system map info, to be returned in es:di
+    mov eax, 0xE820
+    mov ecx, 20 ;len of memory block
+    mov edi, 0x9000 ;buffer
+    int 0x15
+    jc NoMemoryMap
+
+GetMemoryInfo:
+;the output from 15h/E820:
+;CF indicates no errors
+;ES:DI has the returned address range pointer
+    add edi, 20 ;point to next memory address
+    mov edx, 0x534D4150 ;magic number ("SMAP")
+    mov eax, 0xE820
+    mov ecx, 20 ;len of memory block
+    int 0x15
+    test ebx, ebx
+    jnz GetMemoryInfo
+
+; The A20 line is a physical wire or signal that controls whether address bit 20 (A20) is allowed to pass through, which affects memory wraps.
+TestA20Line:
+    ;Check if A20 line is turned on by default
+    mov ax, 0xFFFF
+    mov es, ax
+    mov word[ds:0x7C00], 0xA200 ;0:0x7C00 = 0x7C00
+    cmp word[es:0x7C10], 0xA200 ;0xFFFF:0x7C00 = 0xFFFF*16 + 0X7C10 = 0x107C00
+    ;if the memory addresses are different, we know that A20 is turned off, since we can access
+    ;memory addresses over 2^20 (the 20th bit wasn't truncated)
+    jne A20LineOn
+    mov word[0x7C00], 0xB200
+    cmp word[es:0x7C10], 0xB200
+    je End
+A20LineOn:
+    xor ax, ax
+    mov es, ax
+
+
 PrintMessage:
     mov ah, 0x13 ;int 0x10, type 13
     mov al, 1
@@ -55,6 +96,17 @@ NoLongMode:
     mov bp, NoLongModeMsg ;address of the string
     int 0x10
     jmp End
+NoMemoryMap:
+    ;INT 10h / AH = 13h - write string
+    mov ah, 0x13
+    mov al, 1 ;cursor placement
+    mov bx, 0xc ;light red
+    mov cx, NoMemoryMapLen
+    xor dx, dx ;row, col
+    mov bp, NoMemoryMapMsg ;address of the string
+    int 0x10
+    jmp End
+
 NotSupported:
 End:
     hlt
@@ -65,3 +117,7 @@ End:
 DriveID: db 0
 Message: db "Hello, welcome to PotongOS! :)"
 MessageLen: equ $-Message
+NoLongModeMsg: db "CPU does not support long mode..."
+NoLongModeLen: equ $-NoLongModeMsg
+NoMemoryMapMsg: db "Error getting memory map..."
+NoMemoryMapLen: equ $-NoMemoryMapMsg
