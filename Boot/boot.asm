@@ -25,6 +25,7 @@ TestDiskExtension:
     cmp bx, 0xaa55 ;the carry flag will be set if Extensions are not supported
     jne LbaNotSupported
 
+;Since the MBR has to be 512 bytes, but hasn't finished the job, we have to load the rest though a loader
 LoadLoader:
     ;INT 13 AH=42: Read Sectors From Drive (read the loader file)
     mov dl, [DriveID]
@@ -77,7 +78,7 @@ ReadPacket: times 16 db 0
 ReadErrorMsg: db "Error Reading The Loader...    "
 ReadErrorLen: equ $-ReadErrorMsg
 
-;fill the memory between the end of the message up 0x1be with zeroes
+;fill the memory between the end of the message up to 0x1be with zeroes
 times (0x1be - ($-$$)) db 0
 
     db 80h ;the boot indicator
@@ -90,6 +91,6 @@ times (0x1be - ($-$$)) db 0
     ;zero out the other entries
     times (16*3) db 0
 
-    ;The magic number
+    ;The magic number/signature
     db 0x55
     db 0xaa

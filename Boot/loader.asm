@@ -1,8 +1,16 @@
-;still in real mode
 [BITS 16]
 [ORG 0x7e00]
+;still in real mode
 
 Start:
+;INT 10h / AH = 13h - write string
+    mov ah, 0x13
+    mov al, 1 ;cursor placement
+    mov bx, 0xa ;light red
+    mov cx, Message
+    xor dx, dx ;row, col
+    mov bp, MessageLen ;address of the string
+    int 0x10
     ;The same value we've received earlier by testing the disk extension
     mov [DriveID], dl
 
@@ -11,6 +19,8 @@ Start:
     cpuid ;Highest extended CPUID Input
     cmp eax, 0x80000001
     jb NotSupported
+
+
 
     ;CHECK IF CPU IS LONG MODE CAPABLE
     ;CPUID - EAX=80000001h: Extended Processor Info and Feature Bits
@@ -136,11 +146,11 @@ End:
 ;Variables
 DriveID: db 0
 ReadPacket: times 16 db 0
-Message: db "Ready for long mode :)"
+Message:    db "Ready for long mode!"
 MessageLen: equ $-Message
 NoLongModeMsg: db "CPU does not support long mode..."
 NoLongModeLen: equ $-NoLongModeMsg
 NoMemoryMapMsg: db "Error getting memory map..."
 NoMemoryMapLen: equ $-NoMemoryMapMsg
 ReadErrorMsg: db "Error reading the loader..."
-ReadErrorLen equ $-ReadErrorMsg
+ReadErrorLen: equ $-ReadErrorMsg
