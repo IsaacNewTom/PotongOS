@@ -72,7 +72,7 @@ TestA20Line:
     jne A20LineOn
     mov word[0x7C00], 0xB200
     cmp word[es:0x7C10], 0xB200
-    je End
+    je NoLongMode
 A20LineOn:
     xor ax, ax
     mov es, ax
@@ -88,6 +88,7 @@ SetVideoMode:
     xor di, di
     mov cx, MessageLen
     
+
 PrintMessage:
     mov al, [si]
     mov [es:di], al
@@ -98,10 +99,6 @@ PrintMessage:
     loop PrintMessage
 
 
-NotSupported:
-End:
-    hlt
-    jmp End
 ;Errors
 NoLongMode:
     ;INT 10h / AH = 13h - write string
@@ -133,12 +130,16 @@ ReadError:
     mov bp, ReadErrorMsg ;address of the string
     int 0x10
     jmp End
+NotSupported:
+End:
+    hlt
+    jmp End
 
 
 ;Variables
-Message: db "Testing!"
-MessageLen: equ $-Message
 DriveID: db 0
+Message: db "Ready for long mode!"
+MessageLen: equ $-Message
 NoLongModeMsg: db "CPU doesn't support long mode..."
 NoLongModeLen: equ $-NoLongModeMsg
 NoMemoryMapMsg: db "Error getting memory map..."
