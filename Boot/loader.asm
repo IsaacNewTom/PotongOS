@@ -3,14 +3,6 @@
 ;still in real mode
 
 Start:
-;INT 10h / AH = 13h - write string
-    mov ah, 0x13
-    mov al, 1 ;cursor placement
-    mov bx, 0xa ;light red
-    mov cx, Message
-    xor dx, dx ;row, col
-    mov bp, MessageLen ;address of the string
-    int 0x10
     ;The same value we've received earlier by testing the disk extension
     mov [DriveID], dl
 
@@ -19,8 +11,6 @@ Start:
     cpuid ;Highest extended CPUID Input
     cmp eax, 0x80000001
     jb NotSupported
-
-
 
     ;CHECK IF CPU IS LONG MODE CAPABLE
     ;CPUID - EAX=80000001h: Extended Processor Info and Feature Bits
@@ -41,7 +31,7 @@ LoadKernel:
     mov word[si+6], 0x1000 ;segment
     mov dword[si+8], 6 ;sector 6
     mov dword[si+0xc], 0
-    mov ah, 42h
+    mov ah, 0x42
     int 0x13
     jc ReadError
 
@@ -49,8 +39,8 @@ GetMemoryMap:
     ;INT 15h / AH = E820h - get system memory map
     ; returns a list of memory blocks free to use
     xor ebx, ebx
-    mov edx, 0x534D4150 ;magic number ("SMAP") - used by the BIOS to verify the caller is reuqestign the system map info, to be returned in es:di
     mov eax, 0xE820
+    mov edx, 0x534D4150 ;magic number ("SMAP") - used by the BIOS to verify the caller is requesting the system map info, to be returned in es:di
     mov ecx, 20 ;len of memory block
     mov edi, 0x9000 ;buffer
     int 0x15
@@ -61,10 +51,12 @@ GetMemoryInfo:
 ;CF indicates no errors
 ;ES:DI has the returned address range pointer
     add edi, 20 ;point to next memory address
-    mov edx, 0x534D4150 ;magic number ("SMAP")
     mov eax, 0xE820
+    mov edx, 0x534D4150 ;magic number ("SMAP")
     mov ecx, 20 ;len of memory block
     int 0x15
+    jc TestA20Line
+    
     test ebx, ebx
     jnz GetMemoryInfo
 
@@ -80,7 +72,7 @@ TestA20Line:
     jne A20LineOn
     mov word[0x7C00], 0xB200
     cmp word[es:0x7C10], 0xB200
-    je End
+    je NoLongMode
 A20LineOn:
     xor ax, ax
     mov es, ax
@@ -95,6 +87,7 @@ SetVideoMode:
     mov es, ax
     xor di, di
     mov cx, MessageLen
+    
 
 PrintMessage:
     mov al, [si]
@@ -145,12 +138,12 @@ End:
 
 ;Variables
 DriveID: db 0
-ReadPacket: times 16 db 0
-Message:    db "Ready for long mode!"
+Message: db "Ready for long mode!"
 MessageLen: equ $-Message
-NoLongModeMsg: db "CPU does not support long mode..."
+NoLongModeMsg: db "CPU doesn't support long mode..."
 NoLongModeLen: equ $-NoLongModeMsg
 NoMemoryMapMsg: db "Error getting memory map..."
 NoMemoryMapLen: equ $-NoMemoryMapMsg
 ReadErrorMsg: db "Error reading the loader..."
 ReadErrorLen: equ $-ReadErrorMsg
+ReadPacket: times 16 db 0
