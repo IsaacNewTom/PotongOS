@@ -82,21 +82,12 @@ SetVideoMode:
     mov ax, 3 ;text mode - 80x25
     int 0x10
 
-    mov si, Message
-    mov ax, 0xB800
-    mov es, ax
-    xor di, di
-    mov cx, MessageLen
-    
-PrintMessage:
-    mov al, [si]
-    mov [es:di], al
-    mov byte[es:di+1], 0xa
+    ;We are now starting to switch to long mode.
+    ;We have to turn off context switches so we wouldn't get interrupted (clear interrup flag)
+    cli
 
-    add di, 2
-    add si, 1
-    loop PrintMessage
-
+    ;load the GDT
+    lgdt [GdtPtr]
 
 NotSupported:
 End:
@@ -136,9 +127,9 @@ ReadError:
 
 
 ;Variables
-Message: db "Testing!"
+;Strings
+Message: db "Booted!"
 MessageLen: equ $-Message
-DriveID: db 0
 NoLongModeMsg: db "CPU doesn't support long mode..."
 NoLongModeLen: equ $-NoLongModeMsg
 NoMemoryMapMsg: db "Error getting memory map..."
@@ -146,3 +137,29 @@ NoMemoryMapLen: equ $-NoMemoryMapMsg
 ReadErrorMsg: db "Error reading the loader..."
 ReadErrorLen: equ $-ReadErrorMsg
 ReadPacket: times 16 db 0
+;The disk extension value
+DriveID: db 0
+
+;The GDT - the descriptors of the segments
+GdtStruct:  dq 0
+CodeSegment: ;for a proper explanation of this code, see GDT descriptors
+        dw 0xffff ;the first 2 bytes indicate the size of the segment
+        dw 0 ;those 24 bits indicate the base address
+        dw 0
+        db 0
+        db 0x9a ;(10011010), present bit = 1, dpl (descriptor priv level) = 0, s (system descriptor) = 1, type = 1010, R non-comforming
+        db 0xcf ;G = 1, DB = 1, NULL, A = 0, LIMIT = max (1111)
+
+DataSegment:
+        dw 0xffff
+        dw 0 
+        dw 0
+        db 0
+        db 0x92 ; type = 0010, RW
+        db 0xcf 
+
+GdtSize: equ $-GdtStruct
+
+; The variable is split into 2: the size of the GDT - 1, and the address of the GDT
+GdtPtr: dw GdtSize - 1
+        dd  GdtStruct
