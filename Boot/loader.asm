@@ -88,7 +88,18 @@ SetVideoMode:
 
     ;load the GDT
     lgdt [GdtPtr]
+    ;load the IDT
+    lidt [IdtPtr]
 
+    ;Enable protected mode
+    mov eax, cr0
+    or eax, 1
+    mov cr0, eax
+
+    ;Load the code segment
+    jmp 8:ProtectedModeEntry
+
+;long mode errors
 NotSupported:
 End:
     hlt
@@ -125,6 +136,23 @@ ReadError:
     int 0x10
     jmp End
 
+
+
+[BITS 32]
+ProtectedModeEntry:
+    ;load the data segment register
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov ss, ax
+    mov esp, 0x7c00
+
+    mov byte[0xb8000], 'T'
+    mov byte[0xb8001], 0xa
+
+EndProtectedMode:
+    hlt
+    jmp EndProtectedMode
 
 ;Variables
 ;Strings
@@ -163,3 +191,7 @@ GdtSize: equ $-GdtStruct
 ; The variable is split into 2: the size of the GDT - 1, and the address of the GDT
 GdtPtr: dw GdtSize - 1
         dd  GdtStruct
+
+;Both the address and the size is zero, since we dont want to use interrupts yet
+IdtPtr: dw 0
+        dd 0
