@@ -173,7 +173,7 @@ GdtStruct:  dq 0
 CodeSegment: ;for a proper explanation of this code, see GDT descriptors
         dw 0xffff ;the first 2 bytes indicate the size of the segment
         dw 0 ;those 24 bits indicate the base address
-        dw 0
+        db 0
         db 0
         db 0x9a ;(10011010), present bit = 1, dpl (descriptor priv level) = 0, s (system descriptor) = 1, type = 1010, R non-comforming
         db 0xcf ;G = 1, DB = 1, NULL, A = 0, LIMIT = max (1111)
@@ -181,7 +181,7 @@ CodeSegment: ;for a proper explanation of this code, see GDT descriptors
 DataSegment:
         dw 0xffff
         dw 0 
-        dw 0
+        db 0
         db 0
         db 0x92 ; type = 0010, RW
         db 0xcf 
