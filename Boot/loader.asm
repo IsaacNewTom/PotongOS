@@ -2,6 +2,8 @@
 [ORG 0x7e00]
 ;still in real mode
 
+;test commit
+
 Start:
     ;The same value we've received earlier by testing the disk extension
     mov [DriveID], dl
