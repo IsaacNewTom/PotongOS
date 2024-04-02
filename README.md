@@ -4,4 +4,3 @@ I used to work on it just for the fun of it, and now I decided to make it offici
 Still in it's VERY early stages though.
 
 # How to run
-Run the build script, and boot it up (either using the bochs emulator, and if so, make sure you configure it, or just anything else)
