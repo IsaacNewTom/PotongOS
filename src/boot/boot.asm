@@ -31,8 +31,7 @@ set_segments:
         mov eax, cr0
         or eax, 0x1
         mov cr0, eax
-        ; jmp CODE_SEG:bit_32
-        jmp $
+        jmp CODE_SEG:bit_32 ; jump to the 32bit code
 
 
 ; THE GDT
@@ -65,6 +64,76 @@ gdt_descriptor:
     dw gdt_end - gdt_start - 1
     dd gdt_start
     
+
+
+;---------------------------
+; Protected mode as of here |
+;---------------------------
+[BITS 32]
+; load the kernel
+bit_32:
+    mov eax, 1 ; starting sector
+    mov ecx, 100 ; since we have 100 sectors of nullbytes in the kernel
+    mov edi, 0x0100000 ; the addr we want to load into
+    call ata_intr_lba_read
+
+; read through the ATA interface
+; dx - port
+ata_intr_lba_read:
+    mov ebx, eax ;Backup the LBA
+    
+    ; send the 8 highest bits of the lba to the hard disk driver
+    shr eax, 24 ; eax would now hold those 8 bits
+    or eax, 0xE0 ; master drive and not slave
+    mov dx, 0x1F6
+    out dx, al
+
+    ; send the number of sectors we want to read
+    mov eax, ecx
+    mov dx, 0x1F2 
+    out dx, al
+
+    ; send the remaining LBA
+    mov eax, ebx
+    mov dx, 0x1F3
+    out dx, al
+
+    ; restore the original LBA and send the 24 highest bits
+    mov dx, 0x1F4
+    mov eax, ebx
+    shr eax, 8
+    out dx, al
+
+    ; send the 24 highest bits
+    mov dx, 0x1F5
+    mov eax, ebx
+    shr eax, 16
+    out dx, al
+
+    mov dx, 0x1F7
+    mov al, 0x20
+    out dx, al
+
+
+    ; Read all of the sectors into memory
+    .next_sector:
+        push ecx
+    
+    ; check if we need to read more
+    .need_to_read:
+        mov dx, 0x1f7
+        in al, dx
+        test al, 8
+        jz .need_to_read
+        
+        ; reading 256 words at a time
+        mov ecx, 256
+        mov dx, 0x1F0
+        rep insw ; input from dx and load into edi
+        pop ecx
+        loop .next_sector
+
+        ret
 
 times 510 - ($ - $$) db 0 ;the BL's size should be 512 bytes whole
 dw 0xAA55 ;the BL's signature
