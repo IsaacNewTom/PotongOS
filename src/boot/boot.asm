@@ -76,6 +76,7 @@ bit_32:
     mov ecx, 100 ; since we have 100 sectors of nullbytes in the kernel
     mov edi, 0x0100000 ; the addr we want to load into
     call ata_intr_lba_read
+    jmp CODE_SEG:0x0100000
 
 ; read through the ATA interface
 ; dx - port
@@ -115,13 +116,13 @@ ata_intr_lba_read:
     out dx, al
 
 
-    ; Read all of the sectors into memory
+    ; read all of the sectors into memory
     .next_sector:
         push ecx
     
     ; check if we need to read more
     .need_to_read:
-        mov dx, 0x1f7
+        mov dx, 0x1F7
         in al, dx
         test al, 8
         jz .need_to_read
