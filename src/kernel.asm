@@ -1,8 +1,10 @@
 [BITS 32]
+global _start
+
 CODE_SEG equ 0x08
 DATA_SEG equ 0x10
 
-bit_32:
+_start:
     ; set the segments while in protected mode
     mov ax, DATA_SEG
     mov ds, ax
