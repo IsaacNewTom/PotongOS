@@ -4,6 +4,8 @@ BITS 16
 ;for the BIOS parameter block, the null bytes would be automatically filled when booting
 CODE_SEG equ gdt_cs - gdt_start
 DATA_SEG equ gdt_data - gdt_start
+
+
 startup:
     jmp short set_cs
     nop
@@ -29,7 +31,8 @@ set_segments:
         mov eax, cr0
         or eax, 0x1
         mov cr0, eax
-        jmp CODE_SEG:bit_32
+        ; jmp CODE_SEG:bit_32
+        jmp $
 
 
 ; THE GDT
@@ -61,25 +64,6 @@ gdt_end:
 gdt_descriptor:
     dw gdt_end - gdt_start - 1
     dd gdt_start
-
-[BITS 32]
-bit_32:
-    ; set the segments while in protected mode
-    mov ax, DATA_SEG
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-    mov ss, ax
-    mov ebp, 0x00200000
-    mov esp, ebp
-
-    ; enable the A20 line, as long as the cipset has a FAST A20 option 
-    in al, 0x92
-    or al, 2
-    out 0x92, al
-
-    jmp $
     
 
 times 510 - ($ - $$) db 0 ;the BL's size should be 512 bytes whole

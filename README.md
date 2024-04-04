@@ -1,6 +1,4 @@
 # PotongOS
-PotongOS is a 64 bit monolithic operating system, coded for educational purposes and for fun! <br />
-I used to work on it just for the fun of it, and now I decided to make it official. <br />
+PotongOS is a 64 bit monolithic operating system, coded for both educational purposes and for fun! <br />
 Still in it's VERY early stages though.
 
-# How to run
