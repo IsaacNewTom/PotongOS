@@ -15,6 +15,13 @@ void write_char_to_terminal_in_coords(int x, int y, char chr, COLOR color)
 /* prints out a character to the correct position of the terminal */
 void write_char_to_terminal(char chr, COLOR color)
 {
+    /* if we encounter a newline char */
+    if (chr == "\n")
+    {
+        current_terminal_row++;
+        current_terminal_col = 0;
+        return;
+    }
     write_char_to_terminal_in_coords(current_terminal_col, current_terminal_row, chr, color);
     current_terminal_col++;
 
