@@ -1,16 +1,18 @@
 #ifndef KERNEL_H
 #define KERNEL_H
-#include <stdint.h>
 
 #define LINEAR_TEXT_BUFF_ADDR 0xB8000
 
-/* returns the the value in little endian we need to write to the text buffer to print the given char with the given color */
-#define TERMINAL_WRITE_CHAR(chr, color) ((color << 8) | chr)
+/* returns the the value we need to write to the text buffer in little endian */
+#define CHAR_AND_COLOR_ENDIANESS(chr, color) ((color << 8) | chr)
 
+/* terminal width */
 #define VGA_WIDTH 80
+/* terminal height */
 #define VGA_HEIGHT 20
 
-enum COLOR{
+/* text buffer colors enum */
+typedef enum COLOR{
     BLACK,
     BLUE,
     GREEN,
@@ -27,9 +29,9 @@ enum COLOR{
     LIGHT_PURPLE,
     YELLOW,
     WHITE
-};
+} COLOR;
 
-
+void init_terminal();
 void kernel_main();
 
 #endif
