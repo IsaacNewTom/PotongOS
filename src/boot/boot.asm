@@ -6,7 +6,7 @@ CODE_SEG equ gdt_cs - gdt_start
 DATA_SEG equ gdt_data - gdt_start
 
 
-_start:
+startup:
     jmp short set_cs
     nop
     times 33 db 0
