@@ -21,3 +21,5 @@ _start:
     out 0x92, al
 
     jmp $
+
+times 512 - ($ - $$) db 0 ;the BL's size should be 512 bytes whole
