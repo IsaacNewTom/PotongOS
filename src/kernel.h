@@ -31,7 +31,7 @@ typedef enum COLOR{
     WHITE
 } COLOR;
 
-void init_terminal();
+void print(const char* str);
 void kernel_main();
 
 #endif

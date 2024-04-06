@@ -1,6 +1,7 @@
-#include "kernel.h"
 #include <stdint.h>
 #include <stddef.h>
+#include "kernel.h"
+#include "idt/idt.h"
 
 uint16_t* video_memory = 0;
 uint16_t current_terminal_row = 0;
@@ -16,7 +17,7 @@ void write_char_to_terminal_in_coords(int x, int y, char chr, COLOR color)
 void write_char_to_terminal(char chr, COLOR color)
 {
     /* if we encounter a newline char */
-    if (chr == "\n")
+    if (chr == '\n')
     {
         current_terminal_row++;
         current_terminal_col = 0;
@@ -72,6 +73,9 @@ void print(const char* str)
 void kernel_main()
 {
     init_terminal();
-    print("Hello, world!");
-    
+    print("Hello, world!\n");
+
+    /* intialize the interrupt descriptor table */
+    init_idt();
+    print("Initialized the IDT!\n");    
 }
