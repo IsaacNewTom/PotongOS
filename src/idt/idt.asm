@@ -1,7 +1,11 @@
 section .asm
 
+extern int21h_handler
+
 ;loads the idt 
 global load_idt
+global int21h
+
 load_idt:
     push ebp
     mov ebp, esp
@@ -10,4 +14,12 @@ load_idt:
     lidt [ebx] ; load idt
 
     pop ebp
-    ret
+    
+    
+int21h:
+    cli
+    pushad
+    call int21h_handler
+    popad
+    sti
+    iret

@@ -2,11 +2,21 @@
 #include "config.h"
 #include "memory/memory.h"
 #include "kernel.h"
+#include "io/io.h"
 
 struct idt_descriptor idt_descriptors[TOTAL_INTERRUPTS];
 struct idtr_descriptor idtr_desc;
 
 extern void load_idt(void* ptr);
+extern void int21h();
+
+void int21h_handler()
+{
+    print("Keyboard key pressed, interrupt called\n");
+    
+    /* send the PIC we've executed the interrupt */
+    outb(0x20, 0x20);
+}
 
 /* interrupt 0 */
 void idt_zero()
@@ -34,6 +44,7 @@ void init_idt()
 
     /* load up all of the interrupts */
     set_idt_descriptor(0, idt_zero);
+    set_idt_descriptor(0x21, int21h);
 
     load_idt(&idtr_desc);
 }

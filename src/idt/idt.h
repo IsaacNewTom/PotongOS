@@ -22,5 +22,7 @@ struct idtr_descriptor
 }__attribute__((packed));
 
 void init_idt();
+void int21h_handler();
+
 
 #endif
