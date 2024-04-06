@@ -80,5 +80,4 @@ void kernel_main()
     init_idt();
     print("Initialized the IDT!\n");   
 
-    outb(0x60, 0xff);
 }
